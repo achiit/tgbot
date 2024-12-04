@@ -3,50 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Group Verification</title>
+    <title>Claim Your Reward</title>
     <style>
-        /* ... (previous CSS remains the same) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .reward-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+
+        .claim-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+            width: 200px;
+        }
+
+        .claim-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .claim-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .join-btn {
+            background: #2196F3;
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .join-btn:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            width: 40px;
+            height: 40px;
+            margin: 20px auto;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .login-required {
+            color: #666;
+            margin: 20px 0;
+            font-size: 16px;
+        }
+
+        #telegram-login {
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Join Our Telegram Group</h1>
+        <h1>🎁 Claim Your Reward</h1>
         
-        <!-- Telegram Login Widget -->
-        <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                data-telegram-login="VerifyUserJoinBot" 
-                data-size="large" 
-                data-onauth="onTelegramAuth(user)"
-                data-request-access="write">
-        </script>
+        <div class="reward-box">
+            <h2>Special Reward Waiting!</h2>
+            <p>Join our Telegram group to claim your reward</p>
+        </div>
 
-        <div id="join-button" style="display: none;">
-            <p>Click below to join our Telegram group:</p>
-            <a href="https://t.me/+WicNyQM2pE8yODQ1" class="btn" target="_blank" onclick="startCheckingMembership()">
+        <!-- Telegram Login Widget -->
+        <div id="telegram-login">
+            <script async src="https://telegram.org/js/telegram-widget.js?22"
+                    data-telegram-login="cheesecakeverify_bot"
+                    data-size="large"
+                    data-onauth="onTelegramAuth(user)"
+                    data-request-access="write">
+            </script>
+        </div>
+
+        <div id="join-group" style="display: none;">
+            <p>Join our Telegram group to continue:</p>
+            <a href="https://t.me/+WicNyQM2pE8yODQ1" target="_blank" class="join-btn" onclick="startCheckingMembership()">
                 Join Telegram Group
             </a>
         </div>
 
-        <div class="loading" id="loading"></div>
-        <div id="status"></div>
+        <button id="claim-btn" class="claim-btn" disabled onclick="claimReward()">
+            Claim Reward
+        </button>
+
+        <div id="loading" class="loading"></div>
+        <div id="status" class="status"></div>
     </div>
 
     <script>
         let userId = null;
         let checkInterval = null;
-        const API_BASE_URL = 'https://3011-2401-4900-65b4-bb79-9da0-797e-bf59-ed8e.ngrok-free.app';
+        const API_BASE_URL = 'https://tgbot-lwfa.onrender.com'; // Replace with your Render URL
 
         function onTelegramAuth(user) {
             userId = user.id;
             console.log('Telegram user ID:', userId);
-            document.getElementById('join-button').style.display = 'block';
+            document.getElementById('join-group').style.display = 'block';
             checkMembership();
         }
 
         function showStatus(message, isError = false) {
             const statusDiv = document.getElementById('status');
             statusDiv.textContent = message;
-            statusDiv.className = isError ? 'error' : 'success';
+            statusDiv.className = `status ${isError ? 'error' : 'success'}`;
             statusDiv.style.display = 'block';
         }
 
@@ -79,13 +210,12 @@
                 showLoading(false);
 
                 if (data.is_member) {
-                    showStatus('✅ You are a member of our group! Welcome!');
-                    document.getElementById('join-button').style.display = 'none';
-                    if (checkInterval) {
-                        clearInterval(checkInterval);
-                    }
+                    document.getElementById('claim-btn').disabled = false;
+                    document.getElementById('join-group').style.display = 'none';
+                    showStatus('✅ You can now claim your reward!', false);
                 } else {
-                    showStatus('Please join our Telegram group to continue', true);
+                    document.getElementById('claim-btn').disabled = true;
+                    showStatus('Please join our Telegram group to claim your reward', true);
                 }
             } catch (error) {
                 showLoading(false);
@@ -110,16 +240,13 @@
             }, 120000);
         }
 
-        // For testing with hard-coded user ID
-        function testWithUserId(testId) {
-            userId = testId;
-            startCheckingMembership();
+        function claimReward() {
+            showStatus('🎉 Congratulations! You have successfully claimed your reward!', false);
+            document.getElementById('claim-btn').disabled = true;
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
         }
     </script>
-
-    <!-- For testing -->
-    <button onclick="testWithUserId('5016196919')" style="margin-top: 20px;">
-        Test with Hard-coded User ID
-    </button>
 </body>
 </html>
