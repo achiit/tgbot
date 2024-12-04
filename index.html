@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Group Verification</title>
+    <style>
+        /* ... (previous CSS remains the same) ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Join Our Telegram Group</h1>
+        
+        <!-- Telegram Login Widget -->
+        <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                data-telegram-login="VerifyUserJoinBot" 
+                data-size="large" 
+                data-onauth="onTelegramAuth(user)"
+                data-request-access="write">
+        </script>
+
+        <div id="join-button" style="display: none;">
+            <p>Click below to join our Telegram group:</p>
+            <a href="https://t.me/+WicNyQM2pE8yODQ1" class="btn" target="_blank" onclick="startCheckingMembership()">
+                Join Telegram Group
+            </a>
+        </div>
+
+        <div class="loading" id="loading"></div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        let userId = null;
+        let checkInterval = null;
+        const API_BASE_URL = 'https://3011-2401-4900-65b4-bb79-9da0-797e-bf59-ed8e.ngrok-free.app';
+
+        function onTelegramAuth(user) {
+            userId = user.id;
+            console.log('Telegram user ID:', userId);
+            document.getElementById('join-button').style.display = 'block';
+            checkMembership();
+        }
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = isError ? 'error' : 'success';
+            statusDiv.style.display = 'block';
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        async function checkMembership() {
+            if (!userId) {
+                showStatus('Please login with Telegram first', true);
+                return;
+            }
+
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE_URL}/check-join-status/${userId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                showLoading(false);
+
+                if (data.is_member) {
+                    showStatus('✅ You are a member of our group! Welcome!');
+                    document.getElementById('join-button').style.display = 'none';
+                    if (checkInterval) {
+                        clearInterval(checkInterval);
+                    }
+                } else {
+                    showStatus('Please join our Telegram group to continue', true);
+                }
+            } catch (error) {
+                showLoading(false);
+                console.error('Error checking membership:', error);
+                showStatus(`Error checking membership status: ${error.message}`, true);
+            }
+        }
+
+        function startCheckingMembership() {
+            checkMembership();
+            
+            if (checkInterval) {
+                clearInterval(checkInterval);
+            }
+            checkInterval = setInterval(checkMembership, 5000);
+
+            setTimeout(() => {
+                if (checkInterval) {
+                    clearInterval(checkInterval);
+                    showStatus('Verification timeout. Please refresh the page and try again.', true);
+                }
+            }, 120000);
+        }
+
+        // For testing with hard-coded user ID
+        function testWithUserId(testId) {
+            userId = testId;
+            startCheckingMembership();
+        }
+    </script>
+
+    <!-- For testing -->
+    <button onclick="testWithUserId('5016196919')" style="margin-top: 20px;">
+        Test with Hard-coded User ID
+    </button>
+</body>
+</html>
